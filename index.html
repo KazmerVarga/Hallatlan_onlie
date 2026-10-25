@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hallatlan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --asztal: #23305a;
+    --asztal-mely: #18213f;
+    --kartya: #fbfaf6;
+    --tinta: #1d1d24;
+    --halvany: #5d5f6e;
+    --napraforgo: #ffb703;
+    --hatlap: #e85d75;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --asztal: #141a33; --asztal-mely: #0c1024; --kartya: #f3f1ea; color-scheme: dark; }
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: radial-gradient(120% 80% at 50% 0%, var(--asztal), var(--asztal-mely));
+    color: var(--kartya);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 1.25rem;
+  }
+  header { width: 100%; max-width: 34rem; display: flex; justify-content: space-between; align-items: baseline; }
+  h1 { font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+  .szamlalo { font-size: 1rem; opacity: .8; font-variant-numeric: tabular-nums; }
+
+  .asztal { flex: 1; width: 100%; max-width: 34rem; display: flex; align-items: center; justify-content: center; perspective: 1400px; padding: 1.5rem 0; }
+  .kartya {
+    width: 100%; aspect-ratio: 5 / 7; max-height: 70vh;
+    position: relative; transform-style: preserve-3d;
+    transition: transform .6s cubic-bezier(.2,.7,.2,1);
+  }
+  .kartya.fordult { transform: rotateY(180deg); }
+  .oldal {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 1.25rem; padding: 2rem 1.75rem;
+    display: flex; flex-direction: column; justify-content: center;
+    box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  }
+  .elolap { background: var(--kartya); color: var(--tinta); border: 6px solid var(--napraforgo); }
+  .hatlap { background: var(--hatlap); color: #fff; transform: rotateY(180deg); }
+  .kerdesjel { font-size: 4rem; font-weight: 800; line-height: 1; color: var(--napraforgo); margin-bottom: 1rem; }
+  .kerdes { font-size: clamp(1.4rem, 5.5vw, 2rem); font-weight: 600; line-height: 1.2; margin: 0; }
+  .valasz { font-size: clamp(1.6rem, 6.5vw, 2.4rem); font-weight: 800; line-height: 1.15; margin: 0 0 1rem; }
+  .info { font-size: 1.05rem; line-height: 1.45; margin: 0; opacity: .95; }
+  .tipp { margin-top: auto; padding-top: 1rem; font-size: .95rem; color: var(--halvany); }
+  .hatlap .tipp { color: rgba(255,255,255,.85); }
+
+  .gombok { width: 100%; max-width: 34rem; display: grid; gap: .75rem; }
+  button {
+    font: inherit; font-size: 1.15rem; font-weight: 600;
+    border: 0; border-radius: 999px; padding: 1rem 1.25rem; cursor: pointer;
+    background: var(--napraforgo); color: var(--tinta);
+  }
+  button.masodlagos { background: transparent; color: var(--kartya); border: 2px solid rgba(255,255,255,.35); }
+  button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .szabaly { max-width: 34rem; font-size: 1.05rem; line-height: 1.5; color: var(--tinta); }
+  .szabaly p { margin: 0 0 .75rem; }
+  @media (prefers-reduced-motion: reduce) { .kartya { transition: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hallatlan</h1>
+  <span class="szamlalo" id="szamlalo"></span>
+</header>
+
+<main class="asztal">
+  <div class="kartya" id="kartya">
+    <div class="oldal elolap" id="elolap">
+      <div class="szabaly" id="szabaly">
+        <div class="kerdesjel">?</div>
+        <p>A kérdező felolvassa a kérdést, majd elfordul.</p>
+        <p>A többiek megnézik a választ: egyvalaki az igazat mondja, a többiek kitalálnak valamit.</p>
+        <p>Ha a kérdező eltalálja, ki mondott igazat, pontot kap.</p>
+      </div>
+    </div>
+    <div class="oldal hatlap">
+      <p class="valasz" id="valasz"></p>
+      <p class="info" id="info"></p>
+      <p class="tipp">Fordítsátok vissza, mielőtt a kérdező odanéz.</p>
+    </div>
+  </div>
+</main>
+
+<div class="gombok">
+  <button id="fo">Kezdjük</button>
+  <button class="masodlagos" id="ujra" hidden>Új pakli</button>
+</div>
+
+<script src="kerdesek.js"></script>
+<script>
+  const kartya = document.getElementById("kartya");
+  const elolap = document.getElementById("elolap");
+  const fo = document.getElementById("fo");
+  const ujra = document.getElementById("ujra");
+  const szamlalo = document.getElementById("szamlalo");
+  let pakli = [], hely = -1, allapot = "start";
+
+  function keveres() {
+    pakli = KERDESEK.map((_, i) => i);
+    for (let i = pakli.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pakli[i], pakli[j]] = [pakli[j], pakli[i]];
+    }
+    hely = -1;
+  }
+
+  function kovetkezo() {
+    hely++;
+    if (hely >= pakli.length) {
+      elolap.innerHTML = '<div class="kerdesjel">!</div><p class="kerdes">Elfogyott a pakli. Mind a ' + pakli.length + ' kártya megvolt.</p>';
+      fo.hidden = true; ujra.hidden = false; szamlalo.textContent = "";
+      allapot = "vege"; return;
+    }
+    const k = KERDESEK[pakli[hely]];
+    elolap.innerHTML = '<div class="kerdesjel">?</div><p class="kerdes"></p><p class="tipp">Felolvasás után a kérdező elfordul.</p>';
+    elolap.querySelector(".kerdes").textContent = k.k;
+    document.getElementById("valasz").textContent = k.v;
+    document.getElementById("info").textContent = k.i;
+    szamlalo.textContent = (hely + 1) + " / " + pakli.length;
+    fo.textContent = "Válasz megmutatása";
+    ujra.hidden = false; ujra.textContent = "Új pakli";
+    allapot = "kerdes";
+  }
+
+  fo.addEventListener("click", () => {
+    if (allapot === "start") { keveres(); kovetkezo(); }
+    else if (allapot === "kerdes") { kartya.classList.add("fordult"); fo.textContent = "Elrejtés"; allapot = "valasz"; }
+    else if (allapot === "valasz") { kartya.classList.remove("fordult"); fo.textContent = "Következő kártya"; allapot = "rejtett"; }
+    else if (allapot === "rejtett") { kovetkezo(); }
+  });
+
+  ujra.addEventListener("click", () => {
+    if (allapot !== "vege" && !confirm("Biztosan újrakeveritek a paklit?")) return;
+    kartya.classList.remove("fordult");
+    fo.hidden = false; keveres(); kovetkezo();
+  });
+</script>
+</body>
+</html>
